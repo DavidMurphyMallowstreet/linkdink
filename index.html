@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="Author" content="A.N. Other">
+    <meta name="Description" content="A sample html file for extracting meta data">
+    <meta name="Keywords" content="JavaScript, DOM, W3C">
+
+    <script src="https://cdn.firebase.com/js/client/1.1.2/firebase.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <title>LinkDink</title>
+</head>
+<body>
+
+    <a href="#" class="btn btn-danger bt-social" data-provider="google">Login - Google+</a>
+
+    <a href="#/logout">Logout</a>
+
+    <button id="send" type="button" title="Send">Send</button>
+
+    <div id="status"></div>
+
+    <script>
+
+        function linkdink(fbaseurl) {
+            var uid = null;
+            var ref = new Firebase(fbaseurl);
+
+//            $('#login').click(authenticate);
+            $('a[href="#logout"]').click(logout);
+            $('#send').click(sendUrl);
+
+
+            $('.bt-social').on('click', function (e) {
+                var $currentButton = $(this);
+                var provider = $currentButton.data('provider');
+                var socialLoginPromise;
+                e.preventDefault();
+
+                socialLoginPromise = thirdPartyLogin(provider);
+                handleAuthResponse(socialLoginPromise); //, 'profile');
+            });
+
+            function thirdPartyLogin(provider) {
+                var deferred = $.Deferred();
+
+                ref.authWithOAuthPopup(provider, function (err, user) {
+                    if (err) {
+                        deferred.reject(err);
+                    }
+
+                    if (user) {
+                        deferred.resolve(user);
+                    }
+                });
+
+                return deferred.promise();
+            };
+
+            function handleAuthResponse(promise) { //, route) {
+                $.when(promise)
+                        .then(function (authData) {
+                            console.log("Authenticated:" + authData);
+                            // route
+                            //routeTo(route);
+                        }, function (err) {
+                            console.log(err);
+                            // pop up error
+//                            showAlert({
+//                                title: err.code,
+//                                detail: err.message,
+//                                className: 'alert-danger'
+//                            });
+                        });
+            }
+
+            ref.onAuth(function(authData) {
+                if (authData) {
+                    // user authenticated with Firebase
+                    console.log("User ID: " + authData.uid + ", Provider: " + authData.provider);
+
+                    //var userRef = ref.child('users').child(authData.uid);
+                    uid = authData.uid;
+
+                } else {
+                    // user is logged out
+                    console.log("User Logged out.");
+                }
+            });
+
+            function logout(e) {
+                e.preventDefault();
+                ref.unauth();
+            }
+
+            function sendUrl(e) {
+                e.preventDefault();
+
+                var userlinks = ref.child(uid);
+                var item = {
+                    'url': location.href,
+                    'title': document.title,
+                    'Keywords': getMetaContent('Keywords'),
+                    'description': getMetaContent('Description'),
+                    'category': 'none',
+                    'timestamp': Firebase.ServerValue.TIMESTAMP
+                };
+
+                userlinks.push(item);
+
+                $('#status').append(JSON.stringify(item));
+
+                console.log(item);
+            };
+
+            function getMetaContent(name) {
+                var values = '';
+                var metaArray = document.getElementsByName(name);
+                for (var i=0; i<metaArray.length; i++) {
+                    values += metaArray[i].content;
+                }
+                return values;
+            };
+        }
+
+        var fbaseurl = 'https://flickering-fire-3875.firebaseio.com/';
+
+        linkdink(fbaseurl);
+
+    </script>
+
+</body>
+</html>
