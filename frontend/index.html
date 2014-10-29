@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Daved For Later</title>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.1/normalize.min.css" rel="stylesheet">
+</head>
+<body>
+	<div class="container">
+		<div class="page-header">
+			<form class="form-horizontal" role="form">
+			  <div class="form-group">
+			    <div class="col-sm-10">
+			      <input type="email" class="form-control" id="linkTb" placeholder="Enter URL">
+			    </div>
+			    <div class="col-sm-2">
+			    	<button type="button" class="btn btn-primary btn-lg" id="saveBtn">Save</button>
+			    </div>
+			  </div>
+			</form>
+		  </div>
+		<input type="hidden" id="titleTb"><br/>
+		<table class="table" id="currentLinks">
+		</table>
+		<button type="button" class="btn" id="clearBtn">Clear</button>
+	</div>
+	<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+	<script>
+		$(document).ready(function(){
+
+			BindLinks();
+			BindDelete();
+
+			$('#clearBtn').click(function(){
+				currentLinks = {items:[]}; 
+				localStorage.setItem("davedlinks", JSON.stringify(currentLinks));
+				BindLinks();
+			});
+
+			$('#saveBtn').click(function(){
+				var currentLinks = JSON.parse(localStorage.getItem("davedlinks"));
+				if(currentLinks==undefined)
+				{
+					currentLinks = {items:[]}; 
+				}
+
+				currentLinks.items.push(
+					{targetLink: $('#linkTb').val(), targetTitle : $('#titleTb').val()}
+					);
+				localStorage.setItem("davedlinks", JSON.stringify(currentLinks));
+				BindLinks();
+				ClearForm();
+			});
+
+			function BindDelete(){
+				$('.delete').click(function(){
+					var currentId = $(this).attr("data-listitemid");
+					var currentLinks = JSON.parse(localStorage.getItem("davedlinks"));
+					currentLinks.items[currentId].splice();
+					localStorage.setItem("davedlinks", JSON.stringify(currentLinks));
+					BindLinks();
+				});
+			}
+
+			function BindLinks(){
+				var currentLinks = JSON.parse(localStorage.getItem("davedlinks"));
+				if(currentLinks!=undefined)
+				{
+					$("#currentLinks").empty();
+					for(var i=0; i < currentLinks.items.length; i++)
+					{
+						$('#currentLinks').append('<tr><td><i class="glyphicon glyphicon-remove-circle delete" data-listitemid="' + i + '"/></td><td><a href="' + currentLinks.items[i].targetLink + '"">' + currentLinks.items[i].targetTitle + '</a></td></tr>');
+					}
+				}
+			}
+
+			function ClearForm(){
+				$('#titleTb').val('');
+				$('#linkTb').val('');
+			}
+
+			function GetTitle(){
+				$.ajax({
+				      url: "http://textance.herokuapp.com/title/" + $('#linkTb').val().replace('https://','').replace('http://',''),
+				      complete: function(data)
+				      {
+				        if(data.responseText != undefined || data.responseText != '')
+				        {
+				        	$('#titleTb').val(data.responseText);
+				        } else {
+				        	$('#titleTb').val($('#linkTb').val().replace('https://','').replace('http://',''));
+				        }
+				    }
+				});
+			}
+
+		});
+	</script>
+</body>
+</html>
