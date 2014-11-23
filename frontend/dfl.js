@@ -57,9 +57,14 @@ $(document).ready(function(){
 			$("#currentLinks").empty();
 			for(var i=0; i < currentLinks.items.length; i++)
 			{
-				$('#currentLinks').append('<tr><td><i class="glyphicon glyphicon-remove-circle delete" data-listitemid="' + i + '"/></td><td><a href="' + currentLinks.items[i].targetLink + '"">' + currentLinks.items[i].targetTitle + '</a></td></tr>');
+				$('#currentLinks').append('<tr><td><i class="glyphicon glyphicon-remove-circle delete" data-listitemid="' + i + '"/></td><td><a href="' + currentLinks.items[i].targetLink + '"">' + currentLinks.items[i].targetTitle + '</a></td></tr>' +
+					'<tr class="editdisplay" id="item_' + i + '"><td></td><td><input type="text" data-listitemid="' + i + '" class="form-control cattypeahead" placeholder="Category"></td></tr>');
 			}
 		}
+	}
+
+	function BindCatTypeahead(){
+		$('.cattypeahead').typeahead({source:localStorage.getItem("davedcats")});
 	}
 
 	function BindCats(){
@@ -72,7 +77,7 @@ $(document).ready(function(){
 				$('#categories').append('<li><a href="?/' + currentCats.items[i].Name + '"">' + currentCats.items[i].Name + '</a></li>');
 			}
 		}
-
+		BindCatTypeahead();
 	}
 
 	function ClearForm(){
